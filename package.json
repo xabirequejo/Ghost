@@ -70,7 +70,8 @@
     "moment-timezone": "0.5.45",
     "cheerio": "1.0.0-rc.12",
     "ember-modifier": "4.2.0",
-    "ember-auto-import": "2.10.0"
+    "ember-auto-import": "2.10.0",
+    "cron-validate": "1.4.5"
   },
   "lint-staged": {
     "*.js": "eslint"
