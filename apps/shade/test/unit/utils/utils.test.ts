@@ -7,7 +7,8 @@ import {
     formatDisplayDate, 
     formatNumber,
     formatDuration,
-    formatPercentage
+    formatPercentage,
+    getRangeForStartDate
 } from '@/lib/utils';
 import moment from 'moment-timezone';
 import {vi} from 'vitest';
@@ -180,6 +181,93 @@ describe('utils', function () {
             
             formatted = formatPercentage(1);
             assert.equal(formatted, '100%');
+        });
+    });
+
+    describe('getRangeForStartDate function', function () {
+        beforeEach(function () {
+            vi.useFakeTimers();
+        });
+
+        afterEach(function () {
+            vi.restoreAllMocks();
+        });
+
+        it('demonstrates timezone issue with multi-day spans', function () {
+            // Mock current time: 2024-01-12T07:00:00Z (UTC)
+            // In UTC+8 timezone, this is 2024-01-12T15:00:00 (local)
+            const mockCurrentTime = new Date('2024-01-12T07:00:00Z');
+            vi.setSystemTime(mockCurrentTime);
+
+            // Mock user's timezone to UTC+8
+            vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+                timeZone: 'Asia/Shanghai',
+                locale: 'en-US',
+                calendar: 'gregory',
+                numberingSystem: 'latn'
+            });
+
+            // Post published: 2024-01-10T08:00:00Z (UTC)
+            // In UTC+8 timezone, this is 2024-01-10T16:00:00 (local)
+            const publishedAt = '2024-01-10T08:00:00Z';
+
+            // Current implementation (raw time difference)
+            const currentResult = getRangeForStartDate(publishedAt);
+            
+            // Expected behavior: calendar days in user's timezone
+            // Published: Jan 10th (local), Current: Jan 12th (local) = 3 days
+            const expectedResult = 3;
+
+            // The current implementation calculates ~1.96 days = Math.ceil(1.96) = 2
+            // But it should be 3 calendar days in the user's timezone
+            assert.equal(currentResult, 2, 'Current implementation returns 2 days (incorrect)');
+            
+            // This test demonstrates the bug - we expect 3 days but get 2
+            assert.notEqual(currentResult, expectedResult, 'Current implementation does not match expected calendar days');
+        });
+
+        it('demonstrates same-day scenario is handled correctly', function () {
+            // Mock current time: 2024-01-15T07:00:00Z (UTC)
+            const mockCurrentTime = new Date('2024-01-15T07:00:00Z');
+            vi.setSystemTime(mockCurrentTime);
+
+            // Post published: 2024-01-15T06:00:00Z (UTC) - 1 hour ago
+            const publishedAt = '2024-01-15T06:00:00Z';
+
+            const result = getRangeForStartDate(publishedAt);
+            
+            // Math.max(diffInDays, 1) ensures minimum of 1 day
+            assert.equal(result, 1, 'Same-day scenario returns 1 day (correct)');
+        });
+
+        it('shows the correct timezone-aware calculation', function () {
+            // Mock current time: 2024-01-12T07:00:00Z (UTC)
+            const mockCurrentTime = new Date('2024-01-12T07:00:00Z');
+            vi.setSystemTime(mockCurrentTime);
+
+            // Mock user's timezone to UTC+8
+            vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+                timeZone: 'Asia/Shanghai',
+                locale: 'en-US',
+                calendar: 'gregory',
+                numberingSystem: 'latn'
+            });
+
+            const publishedAt = '2024-01-10T08:00:00Z';
+
+            // This is how it SHOULD be calculated:
+            const timezone = 'Asia/Shanghai';
+            const publishedDate = moment.tz(publishedAt, timezone).startOf('day');
+            const today = moment.tz(timezone).startOf('day');
+            const correctDiff = today.diff(publishedDate, 'days') + 1;
+
+            assert.equal(correctDiff, 3, 'Correct timezone-aware calculation returns 3 days');
+            
+            // Compare with current (broken) implementation
+            const currentResult = getRangeForStartDate(publishedAt);
+            assert.equal(currentResult, 2, 'Current implementation returns 2 days');
+            
+            assert.notEqual(currentResult, correctDiff, 'Current implementation differs from correct calculation');
         });
     });
 }); 
