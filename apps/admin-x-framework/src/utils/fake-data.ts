@@ -1528,8 +1528,9 @@ export function createTinybirdFakeDataProvider() {
         
         // Special handling for api_kpis with post_uuid
         if (endpointName === 'api_kpis' && postUuid) {
-            // Use the dedicated generatePostKpis function
-            return generatePostKpis();
+            // Use the dedicated generatePostKpis function with caching
+            // Cache key is the same for all post_uuid requests to ensure consistent data
+            return withCache('postKpis', generatePostKpis);
         }
         
         // Check if we have fake data for this Tinybird endpoint  
