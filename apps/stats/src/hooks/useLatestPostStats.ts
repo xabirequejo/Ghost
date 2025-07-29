@@ -73,6 +73,16 @@ export const useLatestPostStats = () => {
             return null;
         }
 
+        // Debug log the raw post data
+        // eslint-disable-next-line no-console
+        console.log('[useLatestPostStats] Raw post data:', {
+            id: extendedPost.id,
+            title: extendedPost.title,
+            published_at: extendedPost.published_at,
+            published_at_type: typeof extendedPost.published_at,
+            isValidDate: extendedPost.published_at ? !isNaN(new Date(extendedPost.published_at).getTime()) : 'no date'
+        });
+
         // If we have a post but no stats, return the post with default stats
         const statsData = postStatsData?.stats?.[0] || {
             id: extendedPost.id,
@@ -85,7 +95,7 @@ export const useLatestPostStats = () => {
             visitors: 0
         };
 
-        return {
+        const result = {
             // Post content from Posts API
             id: extendedPost.id,
             uuid: extendedPost.uuid,
@@ -110,6 +120,19 @@ export const useLatestPostStats = () => {
             visitors: statsData.visitors,
             click_rate: null // TODO: Add click_rate to PostStats interface if needed
         };
+
+        // Log the final combined result
+        // eslint-disable-next-line no-console
+        console.log('[useLatestPostStats] Final combined result:', {
+            id: result.id,
+            title: result.title,
+            published_at: result.published_at,
+            published_at_type: typeof result.published_at,
+            hasStats: Boolean(statsData),
+            statsId: statsData?.id
+        });
+
+        return result;
     }, [extendedPost, postStatsData]);
 
     return {

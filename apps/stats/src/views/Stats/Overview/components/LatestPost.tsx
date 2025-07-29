@@ -1,9 +1,10 @@
 import React, {useState} from 'react';
-import {Button, Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyIndicator, LucideIcon, PostShareModal, Skeleton, cn, formatDisplayDate, formatNumber, formatPercentage} from '@tryghost/shade';
+import {Button, Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyIndicator, LucideIcon, PostShareModal, Skeleton, cn, formatNumber, formatPercentage} from '@tryghost/shade';
 
 import {Post, getPostMetricsToDisplay} from '@tryghost/admin-x-framework';
 import {useAppContext, useNavigate} from '@tryghost/admin-x-framework';
 import {useGlobalData} from '@src/providers/GlobalDataProvider';
+import {safeFormatDisplayDate} from '@src/utils/date-formatting';
 
 // Import the interface from the hook
 import {LatestPostWithStats} from '@src/hooks/useLatestPostStats';
@@ -104,8 +105,13 @@ const LatestPost: React.FC<LatestPostProps> = ({
                                 <div className='mt-0.5 text-sm text-muted-foreground'>
                                     {latestPostStats.authors && latestPostStats.authors.length > 0 && (
                                         <div>
-                                            By {latestPostStats.authors.map(author => author.name).join(', ')} &ndash;
-                                            {formatDisplayDate(latestPostStats.published_at)}
+                                            By {latestPostStats.authors.map(author => author.name).join(', ')}
+                                            {latestPostStats.published_at && (
+                                                <>
+                                                    {' '}&ndash;{' '}
+                                                    {safeFormatDisplayDate(latestPostStats.published_at, 'LatestPost')}
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                     <div className='mt-0.5'>

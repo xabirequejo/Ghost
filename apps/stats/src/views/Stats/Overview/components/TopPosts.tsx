@@ -1,11 +1,12 @@
 import FeatureImagePlaceholder from '../../components/FeatureImagePlaceholder';
 import React from 'react';
-import {Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyIndicator, LucideIcon, SkeletonTable, abbreviateNumber, cn, formatDisplayDate, formatNumber} from '@tryghost/shade';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyIndicator, LucideIcon, SkeletonTable, abbreviateNumber, cn, formatNumber} from '@tryghost/shade';
 import {TopPostViewsStats} from '@tryghost/admin-x-framework/api/stats';
 import {getPeriodText} from '@src/utils/chart-helpers';
 import {getPostStatusText} from '@tryghost/admin-x-framework/utils/post-utils';
 import {useAppContext, useNavigate} from '@tryghost/admin-x-framework';
 import {useGlobalData} from '@src/providers/GlobalDataProvider';
+import {safeFormatDisplayDate} from '@src/utils/date-formatting';
 
 interface PostlistTooptipProps {
     title?: string;
@@ -105,7 +106,7 @@ const TopPosts: React.FC<TopPostsProps> = ({
                                                                 published_at: post.published_at,
                                                                 type: typeof post.published_at
                                                             });
-                                                            return formatDisplayDate(post.published_at);
+                                                            return safeFormatDisplayDate(post.published_at, 'TopPosts');
                                                         } catch (error) {
                                                             // eslint-disable-next-line no-console
                                                             console.error('[STATS DATE ERROR] TopPosts failed to format published_at:', error, post);
