@@ -635,6 +635,51 @@ function generateKpis() {
 }
 
 /**
+ * Generates fake KPIs data for a specific post
+ * Returns 7 days of data with visits between 50-100 per day and pageviews 1.5x visits
+ */
+function generatePostKpis() {
+    const data = [];
+    const today = new Date();
+    
+    // Generate the last 7 days of data
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        
+        // Generate visits between 50 and 100
+        const visits = 50 + Math.floor(Math.random() * 51);
+        // Pageviews are 1.5x visits
+        const pageviews = Math.floor(visits * 1.5);
+        
+        data.push({
+            date: date.toISOString().split('T')[0],
+            visits,
+            pageviews,
+            bounce_rate: Number((0.35 + Math.random() * 0.3).toFixed(2)), // 35-65% bounce rate
+            avg_session_sec: Number((120 + Math.random() * 240).toFixed(2)) // 2-6 minutes average session
+        });
+    }
+    
+    return {
+        meta: [
+            {name: 'date', type: 'Date'},
+            {name: 'visits', type: 'UInt64'},
+            {name: 'pageviews', type: 'UInt64'},
+            {name: 'bounce_rate', type: 'Float64'},
+            {name: 'avg_session_sec', type: 'Float64'}
+        ],
+        data,
+        rows: data.length,
+        statistics: {
+            elapsed: 0.02 + Math.random() * 0.01,
+            rows_read: Math.floor(Math.random() * 5000) + 1000,
+            bytes_read: Math.floor(Math.random() * 300000) + 100000
+        }
+    };
+}
+
+/**
  * Generates fake top locations data for Tinybird
  * Uses master analytics model to ensure consistency
  */
@@ -1481,6 +1526,12 @@ export function createTinybirdFakeDataProvider() {
             endpointName = endpoint;
         }
         
+        // Special handling for api_kpis with post_uuid
+        if (endpointName === 'api_kpis' && postUuid) {
+            // Use the dedicated generatePostKpis function
+            return generatePostKpis();
+        }
+        
         // Check if we have fake data for this Tinybird endpoint  
         if (endpointName in tinybirdEndpointMap || endpoint in tinybirdEndpointMap) {
             const data = tinybirdEndpointMap[endpointName] ? tinybirdEndpointMap[endpointName]() : tinybirdEndpointMap[endpoint]();
@@ -1517,131 +1568,6 @@ export function createTinybirdFakeDataProvider() {
             
             // If post_uuid is provided, filter the data for that specific post
             if (postUuid && data) {
-                // For KPIs, filter to only show data for the specific post
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if (endpointName === 'api_kpis' && (data as any).data && Array.isArray((data as any).data)) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const kpiData = data as any;
-                    
-                    // First, filter by date range if provided
-                    let filteredByDate = kpiData.data;
-                    if (dateFrom || dateTo) {
-                        const fromDate = dateFrom ? new Date(dateFrom) : new Date('2000-01-01');
-                        const toDate = dateTo ? new Date(dateTo) : new Date();
-                        
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        filteredByDate = kpiData.data.filter((item: any) => {
-                            const itemDate = new Date(item.date);
-                            return itemDate >= fromDate && itemDate <= toDate;
-                        });
-                        
-                        // eslint-disable-next-line no-console
-                        console.log('📅 Date filtering applied:', {
-                            dateFrom,
-                            dateTo,
-                            originalDays: kpiData.data.length,
-                            filteredDays: filteredByDate.length
-                        });
-                    } else {
-                        // If no date range is specified but we have a post_uuid,
-                        // simulate a post that was published within the data range
-                        // This ensures the total matches the chart when both use different date ranges
-                        
-                        // Use post UUID to generate a consistent publication date
-                        const hashCode = postUuid.split('').reduce((acc, char) => {
-                            return ((acc << 5) - acc) + char.charCodeAt(0);
-                        }, 0);
-                        const daysAgo = 5 + (Math.abs(hashCode) % 20); // 5-25 days ago
-                        const publicationDate = new Date();
-                        publicationDate.setDate(publicationDate.getDate() - daysAgo);
-                        
-                        // Filter to only show data from publication date onwards
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        filteredByDate = kpiData.data.filter((item: any) => {
-                            return new Date(item.date) >= publicationDate;
-                        });
-                        
-                        // eslint-disable-next-line no-console
-                        console.log('📅 Implicit date filtering for post:', {
-                            postUuid,
-                            daysAgo,
-                            publicationDate: publicationDate.toISOString().split('T')[0],
-                            filteredDays: filteredByDate.length
-                        });
-                    }
-                    
-                    // Debug logging
-                    // eslint-disable-next-line no-console
-                    console.log('🎯 Post-specific KPI filtering activated:', {
-                        endpoint: endpointName,
-                        postUuid,
-                        dateRange: {dateFrom, dateTo},
-                        daysOfData: filteredByDate.length
-                    });
-                    
-                    // Generate completely independent data for this post
-                    // Use the post UUID to seed the random number generator for consistency
-                    const postSeed = postUuid.split('').reduce((acc, char) => {
-                        return ((acc << 5) - acc) + char.charCodeAt(0);
-                    }, 0);
-                    
-                    const seededRandom = (seed: number) => {
-                        const x = Math.sin(seed) * 10000;
-                        return x - Math.floor(x);
-                    };
-                    
-                    // Generate a base traffic level for this post (50-500 visits per day average)
-                    const baseTrafficLevel = 50 + Math.floor(seededRandom(postSeed) * 450);
-                    
-                    // Generate daily data with realistic variation
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const scaledData = filteredByDate.map((item: any, index: number) => {
-                        const dayOfWeek = new Date(item.date).getDay();
-                        let dayMultiplier = 1;
-                        
-                        // Create variation pattern
-                        // Weekend reduction
-                        if (dayOfWeek === 0 || dayOfWeek === 6) {
-                            dayMultiplier *= 0.7;
-                        }
-                        
-                        // Day-to-day variation (±40%)
-                        dayMultiplier *= 0.6 + seededRandom(postSeed + index * 100) * 0.8;
-                        
-                        // Occasional spikes (10% chance of 2x traffic)
-                        if (seededRandom(postSeed + index * 200) > 0.9) {
-                            dayMultiplier *= 2;
-                        }
-                        
-                        // For very short ranges, add a more dramatic pattern
-                        if (filteredByDate.length <= 7) {
-                            if (index === 0) {
-                                dayMultiplier *= 0.5; // Start low
-                            } else if (index === Math.floor(filteredByDate.length / 2)) {
-                                dayMultiplier *= 1.5; // Peak in middle
-                            }
-                        }
-                        
-                        const postVisits = Math.max(10, Math.round(baseTrafficLevel * dayMultiplier));
-                        const postPageviews = Math.round(postVisits * (1.5 + seededRandom(postSeed + index * 300) * 1.0)); // 1.5-2.5 pageviews per visit
-                        
-                        return {
-                            ...item,
-                            visits: postVisits,
-                            pageviews: postPageviews,
-                            bounce_rate: Number((0.35 + seededRandom(postSeed + index * 400) * 0.3).toFixed(2)),
-                            avg_session_sec: Number((120 + seededRandom(postSeed + index * 500) * 240).toFixed(2))
-                        };
-                    });
-                    
-                    // Return the data in the same format as the original
-                    return {
-                        ...kpiData,
-                        data: scaledData,
-                        rows: scaledData.length
-                    };
-                }
-                
                 // For top pages, filter to only the specific post
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if (endpointName === 'api_top_pages' && (data as any).stats) {
