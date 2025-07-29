@@ -55,6 +55,9 @@ interface ProcessedLocationData {
 }
 
 const Locations:React.FC = () => {
+    // eslint-disable-next-line no-console
+    console.log('[STATS TAB] Locations component rendering');
+    
     const {statsConfig, isLoading: isConfigLoading, range, audience} = useGlobalData();
     const {startDate, endDate, timezone} = getRangeDates(range);
     const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);

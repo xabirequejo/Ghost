@@ -85,7 +85,32 @@ const NewsletterTableRows: React.FC<{
                                 </div>
                             </TableCell>
                             <TableCell className="whitespace-nowrap text-sm">
-                                {formatDisplayDate(new Date(post.send_date))}
+                                {(() => {
+                                    try {
+                                        // eslint-disable-next-line no-console
+                                        console.log('[STATS DATE] Formatting send_date:', {
+                                            post_id: post.post_id,
+                                            post_title: post.post_title,
+                                            send_date: post.send_date,
+                                            send_date_type: typeof post.send_date
+                                        });
+                                        const date = new Date(post.send_date);
+                                        // eslint-disable-next-line no-console
+                                        console.log('[STATS DATE] Parsed date:', {
+                                            date,
+                                            isValid: !isNaN(date.getTime()),
+                                            toString: date.toString()
+                                        });
+                                        return formatDisplayDate(date);
+                                    } catch (error) {
+                                        // eslint-disable-next-line no-console
+                                        console.error('[STATS DATE ERROR] Failed to format send_date:', error, {
+                                            post_id: post.post_id,
+                                            send_date: post.send_date
+                                        });
+                                        return 'Invalid date';
+                                    }
+                                })()}
                             </TableCell>
                             <TableCell className='text-right font-mono text-sm'>
                                 {formatNumber(post.sent_to)}
@@ -219,6 +244,9 @@ const TopNewslettersTable: React.FC<{
 TopNewslettersTable.displayName = 'TopNewslettersTable';
 
 const Newsletters: React.FC = () => {
+    // eslint-disable-next-line no-console
+    console.log('[STATS TAB] Newsletters component rendering');
+    
     const {range, selectedNewsletterId} = useGlobalData();
     const [searchParams] = useSearchParams();
     const {appSettings} = useAppContext();

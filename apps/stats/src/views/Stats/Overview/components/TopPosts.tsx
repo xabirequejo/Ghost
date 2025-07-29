@@ -97,7 +97,21 @@ const TopPosts: React.FC<TopPostsProps> = ({
                                             <div className='flex flex-col'>
                                                 <span className='line-clamp-2 text-lg font-semibold leading-[1.35em]'>{post.title}</span>
                                                 <span className='text-sm text-muted-foreground'>
-                                                    By {post.authors} &ndash; {formatDisplayDate(post.published_at)}
+                                                    By {post.authors} &ndash; {(() => {
+                                                        try {
+                                                            // eslint-disable-next-line no-console
+                                                            console.log('[STATS DATE] TopPosts formatting published_at:', {
+                                                                post_id: post.post_id,
+                                                                published_at: post.published_at,
+                                                                type: typeof post.published_at
+                                                            });
+                                                            return formatDisplayDate(post.published_at);
+                                                        } catch (error) {
+                                                            // eslint-disable-next-line no-console
+                                                            console.error('[STATS DATE ERROR] TopPosts failed to format published_at:', error, post);
+                                                            return 'Invalid date';
+                                                        }
+                                                    })()}
                                                 </span>
                                                 <span className='text-sm text-muted-foreground'>
                                                     {getPostStatusText(post)}

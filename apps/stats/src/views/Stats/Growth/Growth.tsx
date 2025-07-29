@@ -39,6 +39,9 @@ type SourcesOrder = 'free_members desc' | 'paid_members desc' | 'mrr desc' | 'so
 type UnifiedSortOrder = TopPostsOrder | SourcesOrder;
 
 const Growth: React.FC = () => {
+    // eslint-disable-next-line no-console
+    console.log('[STATS TAB] Growth component rendering');
+    
     const {range, site} = useGlobalData();
     const navigate = useNavigate();
     const [sortBy, setSortBy] = useState<UnifiedSortOrder>('free_members desc');

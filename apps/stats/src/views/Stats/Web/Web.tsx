@@ -48,6 +48,8 @@ export const KPI_METRICS: Record<string, KpiMetric> = {
 };
 
 const Web: React.FC = () => {
+    // eslint-disable-next-line no-console
+    console.log('[STATS TAB] Web component rendering');
     const {statsConfig, isLoading: isConfigLoading, range, audience, data} = useGlobalData();
     const {startDate, endDate, timezone} = getRangeDates(range);
     const {appSettings} = useAppContext();

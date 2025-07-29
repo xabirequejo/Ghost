@@ -8,7 +8,16 @@ class StatsErrorBoundary extends React.Component<{children: React.ReactNode}, {h
     }
 
     static getDerivedStateFromError(error: Error) {
+        // eslint-disable-next-line no-console
+        console.error('[STATS ERROR BOUNDARY] Error caught:', error);
+        // eslint-disable-next-line no-console
+        console.error('[STATS ERROR BOUNDARY] Error stack:', error.stack);
         return {hasError: true, error};
+    }
+    
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        // eslint-disable-next-line no-console
+        console.error('[STATS ERROR BOUNDARY] Component stack:', errorInfo.componentStack);
     }
 
     render() {

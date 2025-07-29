@@ -63,9 +63,23 @@ type GrowthChartDataItem = {
 };
 
 const Overview: React.FC = () => {
+    // eslint-disable-next-line no-console
+    console.log('[STATS TAB] Overview component rendering');
+    
     const {appSettings} = useAppContext();
     const {statsConfig, isLoading: isConfigLoading, range, audience} = useGlobalData();
     const {startDate, endDate, timezone} = getRangeDates(range);
+    
+    // eslint-disable-next-line no-console
+    console.log('[STATS TAB] Overview date range:', {
+        range,
+        startDate,
+        endDate,
+        timezone,
+        formattedStartDate: formatQueryDate(startDate),
+        formattedEndDate: formatQueryDate(endDate)
+    });
+    
     const {isLoading: isGrowthStatsLoading, chartData: growthChartData, totals: growthTotals, currencySymbol} = useGrowthStats(range);
     const {data: latestPostStats, isLoading: isLatestPostLoading} = useLatestPostStats();
     const {data: topPostsData, isLoading: isTopPostsLoading} = useTopPostsViews({
