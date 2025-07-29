@@ -1281,7 +1281,7 @@ async function generateTopPosts() {
     initializeMasterAnalytics();
     
     // Fetch real posts for more authentic content - only published posts
-    const realPosts = await fetchRealPosts(10, 'status:published');
+    const realPosts = await fetchRealPosts(5, 'status:published');
     
     const stats = realPosts.map((post, i) => {
         // Use pre-calculated post views from master analytics
@@ -1325,8 +1325,9 @@ async function generateTopPosts() {
     // Sort by conversions (members gained) descending
     stats.sort((a, b) => b.conversions - a.conversions);
     
+    // Return only top 5 posts
     return {
-        stats,
+        stats: stats.slice(0, 5),
         meta: {}
     };
 }
