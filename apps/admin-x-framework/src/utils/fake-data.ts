@@ -520,16 +520,17 @@ function generateMrrHistory() {
         stats.push({
             date: date.toISOString().split('T')[0],
             mrr,
-            currency: 'USD'
+            currency: 'usd'
         });
     }
     
     return {
         stats,
         meta: {
-            totals: {
+            totals: [{
+                currency: 'usd',
                 mrr
-            }
+            }]
         }
     };
 }
