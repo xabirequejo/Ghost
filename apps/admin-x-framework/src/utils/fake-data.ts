@@ -103,11 +103,22 @@ function initializeMasterAnalytics(): void {
     const dailyVisits = [];
     let distributedVisits = 0;
     
+    // eslint-disable-next-line no-console
+    console.log('[initializeMasterAnalytics] Starting daily visits generation');
+    
     // Create a more realistic traffic pattern with weekly cycles
     for (let i = 30; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dayOfWeek = date.getDay();
+        
+        // eslint-disable-next-line no-console
+        console.log(`[initializeMasterAnalytics] Generating day ${30 - i}:`, {
+            daysAgo: i,
+            date: date,
+            dateString: date.toString(),
+            dayOfWeek: dayOfWeek
+        });
         
         // Base traffic with weekly pattern (lower on weekends)
         let baseDailyShare = 1 / 31;
@@ -128,8 +139,18 @@ function initializeMasterAnalytics(): void {
         const visits = Math.floor(totalVisits * baseDailyShare * randomFactor * spikeFactor);
         const pageviews = Math.floor(visits * (1.8 + Math.random() * 0.7));
         
+        const dateString = date.toISOString().split('T')[0];
+        
+        // eslint-disable-next-line no-console
+        console.log(`[initializeMasterAnalytics] Day ${30 - i} date conversion:`, {
+            dateObject: date,
+            isoString: date.toISOString(),
+            dateString: dateString,
+            isValidDate: !isNaN(date.getTime())
+        });
+        
         dailyVisits.push({
-            date: date.toISOString().split('T')[0],
+            date: dateString,
             visits,
             pageviews
         });
@@ -604,17 +625,49 @@ function generateTopSources() {
  * Uses master analytics model to ensure consistency
  */
 function generateKpis() {
+    // eslint-disable-next-line no-console
+    console.log('[generateKpis] Starting generation of site-wide KPIs data');
+    
     // Initialize master analytics if not already done
     initializeMasterAnalytics();
     
+    // eslint-disable-next-line no-console
+    console.log('[generateKpis] Master analytics dailyVisits:', {
+        length: masterAnalytics.dailyVisits.length,
+        firstDay: masterAnalytics.dailyVisits[0],
+        lastDay: masterAnalytics.dailyVisits[masterAnalytics.dailyVisits.length - 1]
+    });
+    
     // Use the pre-calculated daily visits from master analytics
-    const data = masterAnalytics.dailyVisits.map(day => ({
-        date: day.date,
-        visits: day.visits,
-        pageviews: day.pageviews,
-        bounce_rate: Number((0.35 + Math.random() * 0.3).toFixed(2)), // 35-65% bounce rate
-        avg_session_sec: Number((120 + Math.random() * 240).toFixed(2)) // 2-6 minutes average session
-    }));
+    const data = masterAnalytics.dailyVisits.map((day, index) => {
+        try {
+            // eslint-disable-next-line no-console
+            console.log(`[generateKpis] Processing day ${index}:`, {
+                date: day.date,
+                visits: day.visits,
+                pageviews: day.pageviews
+            });
+            
+            return {
+                date: day.date,
+                visits: day.visits,
+                pageviews: day.pageviews,
+                bounce_rate: Number((0.35 + Math.random() * 0.3).toFixed(2)), // 35-65% bounce rate
+                avg_session_sec: Number((120 + Math.random() * 240).toFixed(2)) // 2-6 minutes average session
+            };
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(`[generateKpis] Error processing day ${index}:`, error, day);
+            throw error;
+        }
+    });
+    
+    // eslint-disable-next-line no-console
+    console.log('[generateKpis] Generated data summary:', {
+        dataLength: data.length,
+        firstDate: data[0]?.date,
+        lastDate: data[data.length - 1]?.date
+    });
     
     return {
         meta: [
@@ -639,27 +692,63 @@ function generateKpis() {
  * Returns 7 days of data with visits between 50-100 per day and pageviews 1.5x visits
  */
 function generatePostKpis() {
+    // eslint-disable-next-line no-console
+    console.log('[generatePostKpis] Starting generation of post KPIs data');
+    
     const data = [];
     const today = new Date();
     
+    // eslint-disable-next-line no-console
+    console.log('[generatePostKpis] Today date:', {
+        date: today,
+        isoString: today.toISOString(),
+        dateString: today.toString(),
+        valueOf: today.valueOf()
+    });
+    
     // Generate the last 7 days of data
     for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        
-        // Generate visits between 50 and 100
-        const visits = 50 + Math.floor(Math.random() * 51);
-        // Pageviews are 1.5x visits
-        const pageviews = Math.floor(visits * 1.5);
-        
-        data.push({
-            date: date.toISOString().split('T')[0],
-            visits,
-            pageviews,
-            bounce_rate: Number((0.35 + Math.random() * 0.3).toFixed(2)), // 35-65% bounce rate
-            avg_session_sec: Number((120 + Math.random() * 240).toFixed(2)) // 2-6 minutes average session
-        });
+        try {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            
+            const dateString = date.toISOString().split('T')[0];
+            
+            // eslint-disable-next-line no-console
+            console.log(`[generatePostKpis] Day ${i}:`, {
+                daysAgo: i,
+                date: date,
+                dateString: dateString,
+                isoString: date.toISOString(),
+                isValidDate: !isNaN(date.getTime())
+            });
+            
+            // Generate visits between 50 and 100
+            const visits = 50 + Math.floor(Math.random() * 51);
+            // Pageviews are 1.5x visits
+            const pageviews = Math.floor(visits * 1.5);
+            
+            data.push({
+                date: dateString,
+                visits,
+                pageviews,
+                bounce_rate: Number((0.35 + Math.random() * 0.3).toFixed(2)), // 35-65% bounce rate
+                avg_session_sec: Number((120 + Math.random() * 240).toFixed(2)) // 2-6 minutes average session
+            });
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(`[generatePostKpis] Error generating data for day ${i}:`, error);
+            throw error;
+        }
     }
+    
+    // eslint-disable-next-line no-console
+    console.log('[generatePostKpis] Generated data:', {
+        dataLength: data.length,
+        firstDate: data[0]?.date,
+        lastDate: data[data.length - 1]?.date,
+        sampleData: data[0]
+    });
     
     return {
         meta: [
@@ -1502,6 +1591,12 @@ export function createTinybirdFakeDataProvider() {
     };
 
     return async (endpoint: string): Promise<unknown> => {
+        // eslint-disable-next-line no-console
+        console.log('[TinybirdProvider] Request received:', {
+            endpoint,
+            hasQueryParams: endpoint.includes('?')
+        });
+        
         // Add a small delay to simulate network request
         await new Promise<void>((resolve) => {
             setTimeout(() => resolve(), 100 + Math.random() * 200);
@@ -1521,6 +1616,15 @@ export function createTinybirdFakeDataProvider() {
             postUuid = searchParams.get('post_uuid');
             dateFrom = searchParams.get('date_from');
             dateTo = searchParams.get('date_to');
+            
+            // eslint-disable-next-line no-console
+            console.log('[TinybirdProvider] Query parameters parsed:', {
+                endpointName,
+                postUuid,
+                dateFrom,
+                dateTo,
+                allParams: Array.from(searchParams.entries())
+            });
         } else {
             // No query params, just the endpoint name
             endpointName = endpoint;
@@ -1528,9 +1632,21 @@ export function createTinybirdFakeDataProvider() {
         
         // Special handling for api_kpis with post_uuid
         if (endpointName === 'api_kpis' && postUuid) {
+            // eslint-disable-next-line no-console
+            console.log('[TinybirdProvider] Using generatePostKpis for post-specific KPIs');
+            
             // Use the dedicated generatePostKpis function with caching
             // Cache key is the same for all post_uuid requests to ensure consistent data
-            return withCache('postKpis', generatePostKpis);
+            const result = withCache('postKpis', generatePostKpis);
+            
+            // eslint-disable-next-line no-console
+            console.log('[TinybirdProvider] generatePostKpis result:', {
+                hasData: !!(result as any)?.data,
+                dataLength: (result as any)?.data?.length,
+                firstItem: (result as any)?.data?.[0]
+            });
+            
+            return result;
         }
         
         // Check if we have fake data for this Tinybird endpoint  
@@ -1542,13 +1658,56 @@ export function createTinybirdFakeDataProvider() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kpiData = data as any;
                 if (kpiData.data && Array.isArray(kpiData.data)) {
-                    const fromDate = dateFrom ? new Date(dateFrom) : new Date('2000-01-01');
-                    const toDate = dateTo ? new Date(dateTo) : new Date();
+                    // eslint-disable-next-line no-console
+                    console.log('[Tinybird] Date filtering parameters:', {
+                        dateFrom,
+                        dateTo,
+                        endpoint: endpointName
+                    });
+                    
+                    let fromDate: Date;
+                    let toDate: Date;
+                    
+                    try {
+                        fromDate = dateFrom ? new Date(dateFrom) : new Date('2000-01-01');
+                        toDate = dateTo ? new Date(dateTo) : new Date();
+                        
+                        // eslint-disable-next-line no-console
+                        console.log('[Tinybird] Parsed dates:', {
+                            fromDate,
+                            fromDateValid: !isNaN(fromDate.getTime()),
+                            toDate,
+                            toDateValid: !isNaN(toDate.getTime())
+                        });
+                    } catch (error) {
+                        // eslint-disable-next-line no-console
+                        console.error('[Tinybird] Error parsing dates:', error, {dateFrom, dateTo});
+                        throw error;
+                    }
                     
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const filteredData = kpiData.data.filter((item: any) => {
-                        const itemDate = new Date(item.date);
-                        return itemDate >= fromDate && itemDate <= toDate;
+                    const filteredData = kpiData.data.filter((item: any, index: number) => {
+                        try {
+                            const itemDate = new Date(item.date);
+                            const isValid = !isNaN(itemDate.getTime());
+                            const inRange = itemDate >= fromDate && itemDate <= toDate;
+                            
+                            if (index < 3) { // Log first few items for debugging
+                                // eslint-disable-next-line no-console
+                                console.log(`[Tinybird] Filtering item ${index}:`, {
+                                    itemDate: item.date,
+                                    parsedDate: itemDate,
+                                    isValid,
+                                    inRange
+                                });
+                            }
+                            
+                            return inRange;
+                        } catch (error) {
+                            // eslint-disable-next-line no-console
+                            console.error(`[Tinybird] Error filtering date at index ${index}:`, error, item);
+                            return false;
+                        }
                     });
                     
                     // eslint-disable-next-line no-console
