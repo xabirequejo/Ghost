@@ -918,8 +918,8 @@ function generatePostStats(postId = '687ff029d5bb294d5cca2116') {
  * Generates fake newsletter basic stats for Ghost Admin API using real posts
  */
 async function generateNewsletterBasicStats() {
-    // Fetch real posts that were sent as newsletters
-    const realPosts = await fetchRealPosts(5);
+    // Fetch real posts that were sent as newsletters - only published posts
+    const realPosts = await fetchRealPosts(5, 'status:published');
     
     const stats = [];
     const now = new Date();
@@ -967,8 +967,8 @@ async function generateNewsletterBasicStats() {
  * Generates fake newsletter click stats for Ghost Admin API using real posts
  */
 async function generateNewsletterClickStats() {
-    // Fetch real posts that were sent as newsletters
-    const realPosts = await fetchRealPosts(5);
+    // Fetch real posts that were sent as newsletters - only published posts
+    const realPosts = await fetchRealPosts(5, 'status:published');
     
     const stats = [];
     const now = new Date();
@@ -1017,8 +1017,8 @@ async function generateNewsletterClickStats() {
  * Generates fake newsletter stats (main endpoint) using real posts with fake analytics
  */
 async function generateNewsletterStats() {
-    // Fetch real posts that were sent as newsletters
-    const realPosts = await fetchRealPosts(10);
+    // Fetch real posts that were sent as newsletters - only published posts
+    const realPosts = await fetchRealPosts(10, 'status:published');
     
     const stats = [];
     const now = new Date();
@@ -1114,10 +1114,14 @@ function generateSubscriberCount() {
 /**
  * Fetches real posts from Ghost API for more authentic fake data
  */
-async function fetchRealPosts(limit = 10): Promise<Record<string, unknown>[]> {
+async function fetchRealPosts(limit = 10, filter = ''): Promise<Record<string, unknown>[]> {
     try {
         // Try to fetch real posts from the Ghost API
-        const response = await fetch(`/ghost/api/admin/posts/?limit=${limit}&fields=id,uuid,slug,title,published_at,feature_image,status&include=authors`, {
+        let url = `/ghost/api/admin/posts/?limit=${limit}&fields=id,uuid,slug,title,published_at,feature_image,status&include=authors`;
+        if (filter) {
+            url += `&filter=${encodeURIComponent(filter)}`;
+        }
+        const response = await fetch(url, {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
@@ -1161,8 +1165,8 @@ async function generateTopPostsViews() {
     // Initialize master analytics if not already done
     initializeMasterAnalytics();
     
-    // Fetch real posts from the API
-    const realPosts = await fetchRealPosts(10);
+    // Fetch real posts from the API - only published posts
+    const realPosts = await fetchRealPosts(10, 'status:published');
     
     const stats = realPosts.map((post, i) => {
         // Use pre-calculated post views from master analytics
@@ -1198,7 +1202,7 @@ async function generateTopPostsViews() {
         return {
             post_id: post.id,
             title: post.title,
-            published_at: post.published_at,
+            published_at: post.published_at || new Date(Date.now() - (i + 1) * 7 * 24 * 60 * 60 * 1000).toISOString(), // Ensure we always have a date
             feature_image: post.feature_image || `https://images.unsplash.com/photo-${1500000000 + i}?w=800&h=600`,
             status: post.status || 'published',
             authors: authorsString,
@@ -1233,8 +1237,8 @@ async function generateTopContent() {
     // Initialize master analytics if not already done
     initializeMasterAnalytics();
     
-    // Fetch real posts for more authentic content
-    const realPosts = await fetchRealPosts(15);
+    // Fetch real posts for more authentic content - only published posts
+    const realPosts = await fetchRealPosts(15, 'status:published');
     
     const stats = realPosts.map((post, i) => {
         // Use consistent analytics - distribute remaining visits (30% of total not in top posts)
@@ -1276,8 +1280,8 @@ async function generateTopPosts() {
     // Initialize master analytics if not already done
     initializeMasterAnalytics();
     
-    // Fetch real posts for more authentic content
-    const realPosts = await fetchRealPosts(10);
+    // Fetch real posts for more authentic content - only published posts
+    const realPosts = await fetchRealPosts(10, 'status:published');
     
     const stats = realPosts.map((post, i) => {
         // Use pre-calculated post views from master analytics
@@ -1358,8 +1362,8 @@ export const fakeDataFixtures = {
  * Generates fake posts data with enhanced analytics (clicks, members, etc.)
  */
 async function generatePostsWithFakeAnalytics(limit = 10): Promise<unknown> {
-    // Fetch real posts from the API
-    const realPosts = await fetchRealPosts(limit);
+    // Fetch real posts from the API - only published posts
+    const realPosts = await fetchRealPosts(limit, 'status:published');
     
     // Enhance each post with fake analytics data
     const enhancedPosts = realPosts.map((post, i) => {
