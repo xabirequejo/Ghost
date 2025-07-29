@@ -1166,7 +1166,7 @@ async function generateTopPostsViews() {
     initializeMasterAnalytics();
     
     // Fetch real posts from the API - only published posts
-    const realPosts = await fetchRealPosts(10, 'status:published');
+    const realPosts = await fetchRealPosts(5, 'status:published');
     
     const stats = realPosts.map((post, i) => {
         // Use pre-calculated post views from master analytics
@@ -1225,7 +1225,7 @@ async function generateTopPostsViews() {
     });
     
     return {
-        stats
+        stats: stats.slice(0, 5)
     };
 }
 
