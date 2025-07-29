@@ -80,7 +80,7 @@ function initializeMasterAnalytics(): void {
     const totalVisits = 8000 + Math.floor(Math.random() * 4000); // 8000-12000 total visits
     const totalPageviews = Math.floor(totalVisits * (1.8 + Math.random() * 0.7)); // 1.8-2.5 pages per visit
     const totalMembers = Math.floor(totalVisits * (0.08 + Math.random() * 0.12)); // 8-20% conversion rate
-    const totalMrr = Math.floor(totalMembers * 0.3 * (15 + Math.random() * 20)); // 30% paid, $15-35/month
+    const totalMrr = 2500000 + Math.floor(Math.random() * 1000000); // $25,000-$35,000 MRR in cents
 
     // Distribute visits across 10 top posts (following Pareto principle)
     const postViews = [];
@@ -527,7 +527,7 @@ function generateMemberCountHistory() {
 function generateMrrHistory() {
     const stats = [];
     const now = new Date();
-    let mrr = 2500 + Math.floor(Math.random() * 1000); // Start between $2500-$3500
+    let mrr = 2500000 + Math.floor(Math.random() * 500000); // Start between $25,000-$30,000 in cents
     
     // Generate 30 days of data
     for (let i = 29; i >= 0; i--) {
@@ -535,8 +535,8 @@ function generateMrrHistory() {
         date.setDate(date.getDate() - i);
         
         // Simulate MRR growth with some volatility
-        const growth = Math.floor(Math.random() * 100) - 10; // -10 to +90 change
-        mrr = Math.max(1000, mrr + growth); // Don't go below $1000
+        const growth = Math.floor(Math.random() * 10000) - 1000; // -$10 to +$90 change
+        mrr = Math.max(2000000, mrr + growth); // Don't go below $20,000
         
         stats.push({
             date: date.toISOString().split('T')[0],
@@ -1308,6 +1308,7 @@ async function generateTopPosts() {
             conversions: postAnalytics.members, // Members gained from this post
             free_members: Math.floor(postAnalytics.members * 0.7),
             paid_members: Math.floor(postAnalytics.members * 0.3),
+            mrr: Math.floor(postAnalytics.members * 0.3) * 1000, // $10 average MRR per paid member in cents
             conversion_rate: postAnalytics.views > 0 ? Number((postAnalytics.members / postAnalytics.views * 100).toFixed(1)) : 0,
             // Newsletter analytics
             sent_count: sentCount,
